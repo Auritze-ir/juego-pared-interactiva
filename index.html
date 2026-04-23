@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pared Interactiva — Don Bosco</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
+
+  :root {
+    --navy: #1a2e4a;
+    --orange: #e8621a;
+    --orange2: #ff8c42;
+    --cyan: #00d4e8;
+    --yellow: #ffd94a;
+    --green: #4ade80;
+    --pink: #f472b6;
+    --white: #f8fafc;
+    --bg: #0f1e30;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  #cursor {
+    position: fixed;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--orange2), var(--orange));
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 20px var(--orange), 0 0 40px rgba(232,98,26,0.4);
+    transition: width 0.1s, height 0.1s;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95);
+  }
+
+  /* ===== SCREEN: MENU ===== */
+  #screen-menu {
+    background: radial-gradient(ellipse at 30% 20%, #1e3a5f 0%, var(--bg) 60%);
+  }
+
+  .logo-area {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: floatIn 1s ease forwards;
+  }
+  .logo-brand {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    color: var(--orange);
+    text-shadow: 0 0 40px rgba(232,98,26,0.6), 3px 3px 0 #7a2800;
+    letter-spacing: 2px;
+  }
+  .logo-sub {
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+    color: var(--cyan);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    opacity: 0.8;
+  }
+
+  .menu-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    color: var(--white);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .menu-desc {
+    font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+    color: #8bb8d4;
+    text-align: center;
+    margin-bottom: 40px;
+    max-width: 500px;
+  }
+
+  .levels-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 800px;
+    width: 90%;
+  }
+
+  .level-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .level-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .level-card:hover::before { opacity: 1; }
+  .level-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  }
+  .level-card.c1 { border-color: var(--cyan); }
+  .level-card.c1:hover { box-shadow: 0 20px 40px rgba(0,212,232,0.3); }
+  .level-card.c2 { border-color: var(--orange); }
+  .level-card.c2:hover { box-shadow: 0 20px 40px rgba(232,98,26,0.3); }
+  .level-card.c3 { border-color: var(--pink); }
+  .level-card.c3:hover { box-shadow: 0 20px 40px rgba(244,114,182,0.3); }
+  .level-card.c4 { border-color: var(--yellow); }
+  .level-card.c4:hover { box-shadow: 0 20px 40px rgba(255,217,74,0.3); }
+  .level-card.c5 { border-color: var(--green); }
+  .level-card.c5:hover { box-shadow: 0 20px 40px rgba(74,222,128,0.3); }
+  .level-card.c6 { border-color: #c084fc; }
+  .level-card.c6:hover { box-shadow: 0 20px 40px rgba(192,132,252,0.3); }
+
+  .level-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .level-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+  }
+  .level-hint {
+    font-size: 0.78rem;
+    color: #8bb8d4;
+    line-height: 1.4;
+  }
+
+  /* ===== CANVAS GAME AREA ===== */
+  #screen-game {
+    background: transparent;
+  }
+  #gameCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ===== HUD ===== */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: rgba(15,30,48,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid rgba(232,98,26,0.3);
+    z-index: 100;
+    pointer-events: none;
+  }
+  .hud-left { display: flex; align-items: center; gap: 16px; }
+  .hud-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: var(--orange);
+  }
+  .hud-gesture {
+    font-size: 0.85rem;
+    color: var(--cyan);
+    background: rgba(0,212,232,0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(0,212,232,0.3);
+  }
+  .hud-right { display: flex; align-items: center; gap: 20px; }
+  .hud-score {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.8rem;
+    color: var(--yellow);
+    text-shadow: 0 0 20px rgba(255,217,74,0.5);
+  }
+  .hud-score span { font-size: 0.9rem; color: #8bb8d4; margin-right: 4px; }
+  .hud-lives { font-size: 1.4rem; }
+
+  /* Back button */
+  #btn-back {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 50px;
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 10px 22px;
+    cursor: pointer;
+    z-index: 200;
+    transition: all 0.2s;
+    pointer-events: all;
+  }
+  #btn-back:hover {
+    background: rgba(232,98,26,0.2);
+    border-color: var(--orange);
+    color: var(--orange);
+  }
+
+  /* ===== INSTRUCTIONS OVERLAY ===== */
+  #instructions {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,30,48,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  #instructions h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.5rem;
+    color: var(--orange);
+    text-align: center;
+  }
+  .instr-icon { font-size: 4rem; }
+  .instr-text {
+    font-size: 1.3rem;
+    color: var(--white);
+    text-align: center;
+    max-width: 500px;
+    line-height: 1.6;
+  }
+  .instr-sub {
+    font-size: 1rem;
+    color: #8bb8d4;
+    text-align: center;
+  }
+  #btn-start {
+    margin-top: 10px;
+    background: var(--orange);
+    border: none;
+    border-radius: 50px;
+    color: white;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    padding: 16px 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 30px rgba(232,98,26,0.5);
+    transition: transform 0.15s, box-shadow 0.15s;
+    animation: pulse 2s infinite;
+  }
+  #btn-start:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba(232,98,26,0.7);
+  }
+
+  /* ===== WIN OVERLAY ===== */
+  #win-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,30,48,0.95);
+    z-index: 400;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    display: none;
+  }
+  #win-overlay h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem;
+    color: var(--yellow);
+    text-shadow: 0 0 40px rgba(255,217,74,0.6);
+    animation: pulse 1s infinite;
+  }
+  .win-score {
+    font-family: 'Fredoka One', cursive;
+    font-size: 4rem;
+    color: var(--orange);
+  }
+  .win-stars { font-size: 3rem; }
+  .win-btns { display: flex; gap: 16px; margin-top: 10px; }
+  .win-btn {
+    border: none;
+    border-radius: 50px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    padding: 14px 36px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .win-btn:hover { transform: scale(1.05); }
+  .win-btn.primary { background: var(--orange); color: white; }
+  .win-btn.secondary { background: rgba(255,255,255,0.1); color: var(--white); border: 2px solid rgba(255,255,255,0.2); }
+
+  /* ===== PARTICLES ===== */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 50%;
+    animation: particleFly 1s ease-out forwards;
+    z-index: 500;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes floatIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+  @keyframes particleFly {
+    0% { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+  }
+
+  /* Background particles in menu */
+  .bg-particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: bgFloat linear infinite;
+    opacity: 0.15;
+  }
+  @keyframes bgFloat {
+    from { transform: translateY(110vh) rotate(0deg); }
+    to { transform: translateY(-10vh) rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<!-- ===== MENU ===== -->
+<div id="screen-menu" class="screen">
+  <div class="logo-area">
+    <div class="logo-brand">🏫 Don Bosco</div>
+    <div class="logo-sub">CIFP · Errenteria · Lanbide Heziketa</div>
+  </div>
+  <div class="menu-title">🖐️ ¡Aprende la Pared Interactiva!</div>
+  <div class="menu-desc">Elige un minijuego para practicar cada gesto de la pizarra digital. ¡Suma puntos y conviértete en experto!</div>
+  <div class="levels-grid">
+    <div class="level-card c1" onclick="startGame('tap')">
+      <div class="level-icon">👆</div>
+      <div class="level-name" style="color:var(--cyan)">Toca y Golpea</div>
+      <div class="level-hint">Practica el TAP: ¡explota bolas antes de que salgan!</div>
+    </div>
+    <div class="level-card c2" onclick="startGame('drag')">
+      <div class="level-icon">✋</div>
+      <div class="level-name" style="color:var(--orange)">Arrastra</div>
+      <div class="level-hint">Practica ARRASTRAR: mueve bolas a su casilla correcta</div>
+    </div>
+    <div class="level-card c3" onclick="startGame('pinch')">
+      <div class="level-icon">🤏</div>
+      <div class="level-name" style="color:var(--pink)">Pellizca y Escala</div>
+      <div class="level-hint">Practica PINCH: agranda o reduce cada objeto</div>
+    </div>
+    <div class="level-card c4" onclick="startGame('scroll')">
+      <div class="level-icon">☝️</div>
+      <div class="level-name" style="color:var(--yellow)">Desplaza</div>
+      <div class="level-hint">Practica el SCROLL: desliza para encontrar el objeto</div>
+    </div>
+    <div class="level-card c5" onclick="startGame('write')">
+      <div class="level-icon">✍️</div>
+      <div class="level-name" style="color:var(--green)">Escribe</div>
+      <div class="level-hint">Practica el LÁPIZ: dibuja la forma correcta</div>
+    </div>
+    <div class="level-card c6" onclick="startGame('multitouch')">
+      <div class="level-icon">🙌</div>
+      <div class="level-name" style="color:#c084fc">Multitáctil</div>
+      <div class="level-hint">Practica VARIOS DEDOS: controla múltiples bolas a la vez</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div id="screen-game" class="screen hidden">
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="hud">
+    <div class="hud-left">
+      <div class="hud-title" id="hud-title">🎮 Juego</div>
+      <div class="hud-gesture" id="hud-gesture">TAP</div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-lives" id="hud-lives">❤️❤️❤️</div>
+      <div class="hud-score"><span>Puntos</span><span id="score-display">0</span></div>
+    </div>
+  </div>
+
+  <button id="btn-back" onclick="goMenu()">← Menú</button>
+
+  <!-- Instructions overlay -->
+  <div id="instructions">
+    <div class="instr-icon" id="instr-icon">👆</div>
+    <h2 id="instr-title">Toca y Golpea</h2>
+    <div class="instr-text" id="instr-text">Toca las bolas antes de que salgan de la pantalla. ¡Cuanto más rápido, más puntos!</div>
+    <div class="instr-sub" id="instr-sub">Gesto: TAP (toque simple)</div>
+    <button id="btn-start" onclick="startLevel()">¡Empezar! 🚀</button>
+  </div>
+
+  <!-- Win overlay -->
+  <div id="win-overlay">
+    <div class="win-stars" id="win-stars">⭐⭐⭐</div>
+    <h1 id="win-title">¡Genial!</h1>
+    <div class="win-score" id="win-score">850 pts</div>
+    <div class="win-btns">
+      <button class="win-btn primary" onclick="startLevel()">🔄 Repetir</button>
+      <button class="win-btn secondary" onclick="goMenu()">🏠 Menú</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  CURSOR
+// ============================================================
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+document.addEventListener('mousedown', () => {
+  cursor.style.width = '20px';
+  cursor.style.height = '20px';
+});
+document.addEventListener('mouseup', () => {
+  cursor.style.width = '30px';
+  cursor.style.height = '30px';
+});
+
+// Touch support for cursor
+document.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  cursor.style.left = t.clientX + 'px';
+  cursor.style.top = t.clientY + 'px';
+  cursor.style.width = '44px';
+  cursor.style.height = '44px';
+}, {passive: true});
+document.addEventListener('touchmove', e => {
+  const t = e.touches[0];
+  cursor.style.left = t.clientX + 'px';
+  cursor.style.top = t.clientY + 'px';
+}, {passive: true});
+document.addEventListener('touchend', () => {
+  cursor.style.width = '30px';
+  cursor.style.height = '30px';
+});
+
+// ============================================================
+//  BACKGROUND PARTICLES (MENU)
+// ============================================================
+const menuEl = document.getElementById('screen-menu');
+const colors = ['#e8621a','#00d4e8','#ffd94a','#4ade80','#f472b6','#c084fc'];
+for(let i=0;i<18;i++){
+  const p = document.createElement('div');
+  p.className = 'bg-particle';
+  const size = Math.random()*60+20;
+  p.style.cssText = `
+    width:${size}px;height:${size}px;
+    background:${colors[Math.floor(Math.random()*colors.length)]};
+    left:${Math.random()*100}%;
+    animation-duration:${Math.random()*12+8}s;
+    animation-delay:${Math.random()*-20}s;
+  `;
+  menuEl.appendChild(p);
+}
+
+// ============================================================
+//  SCREEN MANAGEMENT
+// ============================================================
+let currentGame = 'tap';
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById('screen-'+id).classList.remove('hidden');
+}
+
+function goMenu() {
+  stopGame();
+  showScreen('menu');
+  document.getElementById('win-overlay').style.display = 'none';
+}
+
+// ============================================================
+//  GAME DATA
+// ============================================================
+const GAMES = {
+  tap: {
+    title: '👆 Toca y Golpea',
+    gesture: 'TAP',
+    icon: '👆',
+    instr: 'Las bolas rebotan por la pantalla. ¡Tócalas para explotarlas y ganar puntos! Si tres bolas salen de la pantalla, pierdes.',
+    sub: 'Gesto de pizarra: TAP (toque simple con el dedo)',
+    color: '#00d4e8',
+    init: initTap,
+    update: updateTap,
+    draw: drawTap,
+    click: clickTap
+  },
+  drag: {
+    title: '✋ Arrastra',
+    gesture: 'ARRASTRAR',
+    icon: '✋',
+    instr: '¡Arrastra las bolas de colores a su casilla del mismo color! Cada acierto suma puntos.',
+    sub: 'Gesto de pizarra: ARRASTRAR (mantén pulsado y desliza)',
+    color: '#e8621a',
+    init: initDrag,
+    update: updateDrag,
+    draw: drawDrag,
+    click: clickDrag,
+    mousedown: mousedownDrag,
+    mousemove: mousemoveDrag,
+    mouseup: mouseupDrag
+  },
+  pinch: {
+    title: '🤏 Pellizca y Escala',
+    gesture: 'PINCH',
+    icon: '🤏',
+    instr: 'Haz clic en la bola y mueve el ratón HACIA FUERA para agrandarla, o HACIA DENTRO para reducirla. Lleva cada bola al tamaño correcto indicado.',
+    sub: 'Gesto de pizarra: PINCH IN/OUT (dos dedos para escalar)',
+    color: '#f472b6',
+    init: initPinch,
+    update: updatePinch,
+    draw: drawPinch,
+    click: clickPinch,
+    mousedown: mousedownPinch,
+    mousemove: mousemovePinch,
+    mouseup: mouseupPinch
+  },
+  scroll: {
+    title: '☝️ Desplaza',
+    gesture: 'SCROLL',
+    icon: '☝️',
+    instr: 'Desliza el ratón de arriba a abajo para mover la lista. ¡Encuentra y toca el ítem resaltado!',
+    sub: 'Gesto de pizarra: SCROLL (deslizar un dedo arriba/abajo)',
+    color: '#ffd94a',
+    init: initScroll,
+    update: updateScroll,
+    draw: drawScroll,
+    click: clickScroll,
+    mousemove: mousemoveScroll
+  },
+  write: {
+    title: '✍️ Escribe',
+    gesture: 'LÁPIZ',
+    icon: '✍️',
+    instr: 'Dibuja la forma que aparece en pantalla arrastrando el ratón. ¡Cuanto más se parezca, más puntos!',
+    sub: 'Gesto de pizarra: ESCRITURA (dedo o lápiz para dibujar)',
+    color: '#4ade80',
+    init: initWrite,
+    update: updateWrite,
+    draw: drawWrite,
+    mousedown: mousedownWrite,
+    mousemove: mousemoveWrite,
+    mouseup: mouseupWrite
+  },
+  multitouch: {
+    title: '🙌 Multitáctil',
+    gesture: 'MULTI-TAP',
+    icon: '🙌',
+    instr: '¡Haz clic muy rápido en todas las bolas! Aparecen varias a la vez. ¡Necesitas velocidad y precisión!',
+    sub: 'Gesto de pizarra: MULTI-TOUCH (varios dedos simultáneos)',
+    color: '#c084fc',
+    init: initMulti,
+    update: updateMulti,
+    draw: drawMulti,
+    click: clickMulti
+  }
+};
+
+// ============================================================
+//  CANVAS SETUP
+// ============================================================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resizeCanvas() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ============================================================
+//  STATE
+// ============================================================
+let score = 0;
+let lives = 3;
+let gameLoop = null;
+let state = {};
+
+function addScore(pts) {
+  score += pts;
+  document.getElementById('score-display').textContent = score;
+  if(pts > 0) floatText('+' + pts, state.lastX || W/2, state.lastY || H/2, '#ffd94a');
+}
+
+function loseLife() {
+  lives--;
+  updateLives();
+  if(lives <= 0) endGame(false);
+}
+
+function updateLives() {
+  const hearts = ['','❤️','❤️❤️','❤️❤️❤️'];
+  document.getElementById('hud-lives').textContent = lives > 0 ? (hearts[lives]||'') : '💔';
+}
+
+// ============================================================
+//  PARTICLES & FLOAT TEXT
+// ============================================================
+function spawnParticles(x, y, color, count=10) {
+  for(let i=0;i<count;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random()*14+6;
+    const angle = Math.random()*Math.PI*2;
+    const dist = Math.random()*120+40;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      background:${color};
+      left:${x}px;top:${y}px;
+      --tx:${Math.cos(angle)*dist}px;
+      --ty:${Math.sin(angle)*dist}px;
+      animation-duration:${Math.random()*0.5+0.6}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 1200);
+  }
+}
+
+const floatTexts = [];
+function floatText(text, x, y, color) {
+  floatTexts.push({text, x, y, color, life: 1.0, vy: -2});
+}
+
+function drawFloatTexts() {
+  for(let i=floatTexts.length-1;i>=0;i--){
+    const f=floatTexts[i];
+    f.y += f.vy;
+    f.life -= 0.03;
+    if(f.life<=0){floatTexts.splice(i,1);continue;}
+    ctx.save();
+    ctx.globalAlpha = f.life;
+    ctx.font = 'bold 28px Fredoka One, Nunito';
+    ctx.fillStyle = f.color;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = f.color;
+    ctx.shadowBlur = 10;
+    ctx.fillText(f.text, f.x, f.y);
+    ctx.restore();
+  }
+}
+
+// ============================================================
+//  GAME FLOW
+// ============================================================
+function startGame(type) {
+  currentGame = type;
+  const g = GAMES[type];
+  showScreen('game');
+  document.getElementById('hud-title').textContent = g.title;
+  document.getElementById('hud-gesture').textContent = '✋ ' + g.gesture;
+  document.getElementById('instr-icon').textContent = g.icon;
+  document.getElementById('instr-title').textContent = g.title;
+  document.getElementById('instr-text').textContent = g.instr;
+  document.getElementById('instr-sub').textContent = g.sub;
+  document.getElementById('instructions').style.display = 'flex';
+  document.getElementById('win-overlay').style.display = 'none';
+}
+
+function startLevel() {
+  document.getElementById('instructions').style.display = 'none';
+  document.getElementById('win-overlay').style.display = 'none';
+  score = 0;
+  lives = 3;
+  updateLives();
+  document.getElementById('score-display').textContent = '0';
+  floatTexts.length = 0;
+
+  stopGame();
+  state = {};
+  GAMES[currentGame].init();
+  gameLoop = requestAnimationFrame(tick);
+
+  // Event listeners
+  canvas.onclick = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    state.lastX = x; state.lastY = y;
+    GAMES[currentGame].click && GAMES[currentGame].click(x, y);
+  };
+  canvas.onmousedown = (e) => {
+    const r = canvas.getBoundingClientRect();
+    GAMES[currentGame].mousedown && GAMES[currentGame].mousedown(e.clientX-r.left, e.clientY-r.top, e);
+  };
+  canvas.onmousemove = (e) => {
+    const r = canvas.getBoundingClientRect();
+    GAMES[currentGame].mousemove && GAMES[currentGame].mousemove(e.clientX-r.left, e.clientY-r.top, e);
+  };
+  canvas.onmouseup = (e) => {
+    const r = canvas.getBoundingClientRect();
+    GAMES[currentGame].mouseup && GAMES[currentGame].mouseup(e.clientX-r.left, e.clientY-r.top, e);
+  };
+
+  // Touch support
+  canvas.ontouchstart = (e) => {
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches[0];
+    const x = t.clientX-r.left, y = t.clientY-r.top;
+    state.lastX=x; state.lastY=y;
+    GAMES[currentGame].mousedown && GAMES[currentGame].mousedown(x,y,e);
+    GAMES[currentGame].click && GAMES[currentGame].click(x,y);
+  };
+  canvas.ontouchmove = (e) => {
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches[0];
+    GAMES[currentGame].mousemove && GAMES[currentGame].mousemove(t.clientX-r.left, t.clientY-r.top, e);
+  };
+  canvas.ontouchend = (e) => {
+    e.preventDefault();
+    GAMES[currentGame].mouseup && GAMES[currentGame].mouseup(0,0,e);
+  };
+}
+
+function stopGame() {
+  if(gameLoop) cancelAnimationFrame(gameLoop);
+  gameLoop = null;
+  canvas.onclick = null;
+  canvas.onmousedown = null;
+  canvas.onmousemove = null;
+  canvas.onmouseup = null;
+}
+
+function endGame(win=true) {
+  stopGame();
+  const stars = score > 600 ? '⭐⭐⭐' : score > 300 ? '⭐⭐' : '⭐';
+  const titles = ['¡Muy bien! 🎉', '¡Genial! 🚀', '¡Increíble! 🏆'];
+  const idx = score > 600 ? 2 : score > 300 ? 1 : 0;
+  document.getElementById('win-stars').textContent = stars;
+  document.getElementById('win-title').textContent = titles[idx];
+  document.getElementById('win-score').textContent = score + ' puntos';
+  document.getElementById('win-overlay').style.display = 'flex';
+}
+
+function tick(ts) {
+  ctx.clearRect(0,0,W,H);
+  drawBg();
+  GAMES[currentGame].update(ts);
+  GAMES[currentGame].draw(ts);
+  drawFloatTexts();
+  gameLoop = requestAnimationFrame(tick);
+}
+
+function drawBg() {
+  const g = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*0.7);
+  g.addColorStop(0,'#132233');
+  g.addColorStop(1,'#0a1520');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+  // Grid lines subtle
+  ctx.strokeStyle='rgba(255,255,255,0.02)';
+  ctx.lineWidth=1;
+  for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+}
+
+// ============================================================
+//  GAME 1: TAP — bouncing balls
+// ============================================================
+function initTap() {
+  state.balls = [];
+  state.escaped = 0;
+  state.timer = 0;
+  state.spawnInterval = 2000;
+  state.lastSpawn = -99999;
+  state.totalPopped = 0;
+}
+
+function spawnTapBall() {
+  const colors2 = ['#00d4e8','#e8621a','#ffd94a','#4ade80','#f472b6','#c084fc','#ff8c42'];
+  const r = Math.random()*30+20;
+  const edge = Math.floor(Math.random()*4);
+  let x, y, vx, vy;
+  const speed = 2.5 + Math.min(state.totalPopped*0.1, 4);
+  if(edge===0){x=Math.random()*W;y=-r;vx=(Math.random()-0.5)*speed;vy=speed;}
+  else if(edge===1){x=W+r;y=Math.random()*H;vx=-speed;vy=(Math.random()-0.5)*speed;}
+  else if(edge===2){x=Math.random()*W;y=H+r;vx=(Math.random()-0.5)*speed;vy=-speed;}
+  else{x=-r;y=Math.random()*H;vx=speed;vy=(Math.random()-0.5)*speed;}
+  state.balls.push({x,y,vx,vy,r,color:colors2[Math.floor(Math.random()*colors2.length)],wobble:Math.random()*Math.PI*2,life:1});
+}
+
+function updateTap(ts) {
+  if(ts - state.lastSpawn > state.spawnInterval){
+    spawnTapBall();
+    state.lastSpawn = ts;
+    state.spawnInterval = Math.max(600, state.spawnInterval - 50);
+  }
+  for(let i=state.balls.length-1;i>=0;i--){
+    const b=state.balls[i];
+    b.x+=b.vx; b.y+=b.vy;
+    b.wobble+=0.08;
+    if(b.x<-b.r*2||b.x>W+b.r*2||b.y<-b.r*2||b.y>H+b.r*2){
+      state.balls.splice(i,1);
+      state.escaped++;
+      if(state.escaped>=3) loseLife();
+    }
+  }
+}
+
+function drawTap() {
+  // Escaped counter
+  ctx.save();
+  ctx.font='bold 18px Nunito';
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.textAlign='left';
+  ctx.fillText(`Escapadas: ${state.escaped}/3`, 24, H-30);
+  ctx.restore();
+
+  for(const b of state.balls){
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    const wobbleR = b.r + Math.sin(b.wobble)*3;
+    const grd = ctx.createRadialGradient(-wobbleR*0.3,-wobbleR*0.3,2,0,0,wobbleR);
+    grd.addColorStop(0,'rgba(255,255,255,0.8)');
+    grd.addColorStop(0.3,b.color);
+    grd.addColorStop(1,b.color+'88');
+    ctx.beginPath();
+    ctx.arc(0,0,wobbleR,0,Math.PI*2);
+    ctx.fillStyle=grd;
+    ctx.shadowColor=b.color;
+    ctx.shadowBlur=20;
+    ctx.fill();
+    // Shine
+    ctx.beginPath();
+    ctx.arc(-wobbleR*0.3,-wobbleR*0.3,wobbleR*0.25,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.shadowBlur=0;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function clickTap(x, y) {
+  for(let i=state.balls.length-1;i>=0;i--){
+    const b=state.balls[i];
+    const d=Math.hypot(x-b.x,y-b.y);
+    if(d<b.r+10){
+      spawnParticles(b.x,b.y,b.color,12);
+      floatText('+100',b.x,b.y,'#ffd94a');
+      addScore(100);
+      state.balls.splice(i,1);
+      state.totalPopped++;
+      if(state.totalPopped>=20) endGame(true);
+      return;
+    }
+  }
+}
+
+// ============================================================
+//  GAME 2: DRAG — balls to color zones
+// ============================================================
+const DRAG_COLORS = ['#00d4e8','#e8621a','#4ade80','#f472b6'];
+
+function initDrag() {
+  state.zones = DRAG_COLORS.map((c,i)=>({x:W*0.1+i*(W*0.22), y:H*0.75, r:50, color:c, count:0}));
+  state.balls = [];
+  state.dragging = null;
+  state.dragOffX = 0; state.dragOffY = 0;
+  state.matched = 0;
+  for(let i=0;i<8;i++) spawnDragBall();
+}
+
+function spawnDragBall() {
+  const c=DRAG_COLORS[Math.floor(Math.random()*DRAG_COLORS.length)];
+  state.balls.push({
+    x:Math.random()*(W*0.7)+W*0.15,
+    y:Math.random()*(H*0.4)+H*0.1,
+    r:30, color:c, dragging:false
+  });
+}
+
+function updateDrag() {}
+
+function drawDrag() {
+  // Zones
+  for(const z of state.zones){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(z.x,z.y,z.r,0,Math.PI*2);
+    ctx.fillStyle=z.color+'33';
+    ctx.strokeStyle=z.color;
+    ctx.lineWidth=3;
+    ctx.fill();
+    ctx.stroke();
+    ctx.font='bold 14px Nunito';
+    ctx.fillStyle=z.color;
+    ctx.textAlign='center';
+    ctx.fillText(z.count+'', z.x, z.y+5);
+    ctx.restore();
+  }
+  // Label
+  ctx.save();
+  ctx.font='bold 16px Nunito';
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.textAlign='center';
+  ctx.fillText('Arrastra las bolas a su zona de color', W/2, H-20);
+  ctx.fillText(`Combinadas: ${state.matched}/12`, W/2, H*0.9);
+  ctx.restore();
+  // Balls
+  for(const b of state.balls){
+    ctx.save();
+    ctx.translate(b.x,b.y);
+    if(b.dragging){ctx.shadowColor=b.color;ctx.shadowBlur=30;}
+    const grd=ctx.createRadialGradient(-b.r*0.3,-b.r*0.3,2,0,0,b.r);
+    grd.addColorStop(0,'rgba(255,255,255,0.8)');
+    grd.addColorStop(0.4,b.color);
+    grd.addColorStop(1,b.color+'66');
+    ctx.beginPath();
+    ctx.arc(0,0,b.r,0,Math.PI*2);
+    ctx.fillStyle=grd;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function clickDrag(x,y){}
+
+function mousedownDrag(x,y){
+  for(let i=state.balls.length-1;i>=0;i--){
+    const b=state.balls[i];
+    if(Math.hypot(x-b.x,y-b.y)<b.r+5){
+      b.dragging=true;
+      state.dragging=b;
+      state.dragOffX=x-b.x;
+      state.dragOffY=y-b.y;
+      break;
+    }
+  }
+}
+function mousemoveDrag(x,y){
+  if(state.dragging){
+    state.dragging.x=x-state.dragOffX;
+    state.dragging.y=y-state.dragOffY;
+  }
+}
+function mouseupDrag(x,y){
+  if(state.dragging){
+    const b=state.dragging;
+    b.dragging=false;
+    // Check zones
+    for(const z of state.zones){
+      if(Math.hypot(b.x-z.x,b.y-z.y)<z.r+b.r && b.color===z.color){
+        spawnParticles(z.x,z.y,z.color,15);
+        floatText('+150',z.x,z.y,'#ffd94a');
+        addScore(150);
+        z.count++;
+        state.matched++;
+        state.balls = state.balls.filter(bb=>bb!==b);
+        if(state.balls.length<4) spawnDragBall();
+        if(state.matched>=12) endGame(true);
+        break;
+      }
+    }
+    state.dragging=null;
+  }
+}
+
+// ============================================================
+//  GAME 3: PINCH — scale balls
+// ============================================================
+function initPinch(){
+  state.balls=[];
+  state.selected=null;
+  state.lastMX=0; state.lastMY=0;
+  state.done=0;
+  for(let i=0;i<5;i++) spawnPinchBall();
+}
+function spawnPinchBall(){
+  const target=Math.random()*60+20;
+  state.balls.push({
+    x:W*0.15+Math.random()*W*0.7,
+    y:H*0.2+Math.random()*H*0.45,
+    r:target+(Math.random()-0.5)*50,
+    target, color:['#f472b6','#c084fc','#00d4e8'][Math.floor(Math.random()*3)],
+    selected:false, done:false
+  });
+}
+function updatePinch(){}
+function drawPinch(){
+  for(const b of state.balls){
+    if(b.done) continue;
+    ctx.save();
+    ctx.translate(b.x,b.y);
+    if(b.selected){ctx.shadowColor=b.color;ctx.shadowBlur=30;}
+    const grd=ctx.createRadialGradient(-b.r*0.3,-b.r*0.3,2,0,0,b.r);
+    grd.addColorStop(0,'rgba(255,255,255,0.8)');
+    grd.addColorStop(0.4,b.color);
+    grd.addColorStop(1,b.color+'55');
+    ctx.beginPath();
+    ctx.arc(0,0,b.r,0,Math.PI*2);
+    ctx.fillStyle=grd;
+    ctx.fill();
+    // Target ring
+    ctx.beginPath();
+    ctx.arc(0,0,b.target,0,Math.PI*2);
+    ctx.strokeStyle='#ffd94a';
+    ctx.lineWidth=2;
+    ctx.setLineDash([5,5]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font='bold 13px Nunito';
+    ctx.fillStyle='white';
+    ctx.textAlign='center';
+    ctx.fillText(b.r>b.target?'🤏 reduce':'👐 agranda', 0, b.r+20);
+    ctx.restore();
+  }
+  ctx.save();
+  ctx.font='bold 16px Nunito';
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.textAlign='center';
+  ctx.fillText('Haz clic y arrastra para cambiar el tamaño. ¡Llega al aro dorado!', W/2, H-20);
+  ctx.fillText(`Completadas: ${state.done}/5`, W/2, H-45);
+  ctx.restore();
+}
+function clickPinch(x,y){
+  for(const b of state.balls){
+    if(b.done) continue;
+    if(Math.hypot(x-b.x,y-b.y)<b.r+5){
+      state.balls.forEach(bb=>bb.selected=false);
+      b.selected=true;
+      state.selected=b;
+      return;
+    }
+  }
+  state.balls.forEach(bb=>bb.selected=false);
+  state.selected=null;
+}
+function mousedownPinch(x,y){
+  state.lastMX=x; state.lastMY=y;
+  clickPinch(x,y);
+}
+function mousemovePinch(x,y){
+  if(state.selected && state.selected.selected){
+    const dx=x-state.lastMX;
+    const b=state.selected;
+    b.r=Math.max(10,Math.min(120,b.r+dx));
+    if(Math.abs(b.r-b.target)<5){
+      spawnParticles(b.x,b.y,b.color,12);
+      floatText('+200',b.x,b.y,'#ffd94a');
+      addScore(200);
+      b.done=true; b.selected=false; state.selected=null;
+      state.done++;
+      spawnPinchBall();
+      if(state.done>=5) endGame(true);
+    }
+  }
+  state.lastMX=x; state.lastMY=y;
+}
+function mouseupPinch(){}
+
+// ============================================================
+//  GAME 4: SCROLL — find item
+// ============================================================
+const EMOJIS=['🍎','🏀','🚀','🌈','⭐','🔥','🎸','🐬','🦋','🍕','🎯','💡','🦊','🌺','🎪'];
+function initScroll(){
+  state.items=EMOJIS.map((e,i)=>({emoji:e,y:0}));
+  state.scrollY=0;
+  state.target=Math.floor(Math.random()*EMOJIS.length);
+  state.lastMY=0; state.isDragging=false;
+  state.found=0;
+}
+function updateScroll(){}
+function drawScroll(){
+  const itemH=90, topPad=120;
+  ctx.save();
+  // Target hint
+  ctx.font='bold 28px Nunito';
+  ctx.fillStyle='white';
+  ctx.textAlign='center';
+  ctx.fillText('¡Encuentra y toca: '+EMOJIS[state.target], W/2, 60);
+  ctx.font='16px Nunito';
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.fillText('Arrastra arriba/abajo para desplazar • Encontrados: '+state.found+'/6', W/2, 92);
+
+  // Clip area
+  ctx.beginPath();
+  ctx.rect(W/2-150, topPad, 300, H-topPad-40);
+  ctx.clip();
+
+  for(let i=0;i<EMOJIS.length;i++){
+    const y=topPad+i*itemH+state.scrollY;
+    if(y<topPad-itemH||y>H) continue;
+    const isTarget=i===state.target;
+    ctx.fillStyle=isTarget?'rgba(255,217,74,0.15)':'rgba(255,255,255,0.05)';
+    ctx.strokeStyle=isTarget?'#ffd94a':'rgba(255,255,255,0.1)';
+    ctx.lineWidth=isTarget?3:1;
+    roundRect(ctx,W/2-140,y,280,itemH-8,16);
+    ctx.fill();ctx.stroke();
+    ctx.font='36px serif';
+    ctx.textAlign='center';
+    ctx.fillStyle='white';
+    ctx.fillText(EMOJIS[i],W/2,y+itemH*0.55);
+  }
+  ctx.restore();
+}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function clickScroll(x,y){
+  const itemH=90,topPad=120;
+  for(let i=0;i<EMOJIS.length;i++){
+    const iy=topPad+i*itemH+state.scrollY;
+    if(x>W/2-150&&x<W/2+150&&y>iy&&y<iy+itemH-8){
+      if(i===state.target){
+        spawnParticles(x,y,'#ffd94a',15);
+        floatText('+200',x,y,'#ffd94a');
+        addScore(200);
+        state.found++;
+        state.target=Math.floor(Math.random()*EMOJIS.length);
+        if(state.found>=6) endGame(true);
+      } else {
+        floatText('✗',x,y,'#ef4444');
+      }
+      return;
+    }
+  }
+}
+function mousemoveScroll(x,y,e){
+  if(e.buttons===1||e.type==='touchmove'){
+    const dy=y-state.lastMY;
+    state.scrollY+=dy*1.5;
+    const maxScroll=-(EMOJIS.length*90-(H-160));
+    state.scrollY=Math.max(maxScroll,Math.min(0,state.scrollY));
+  }
+  state.lastMY=y;
+}
+
+// ============================================================
+//  GAME 5: WRITE — draw shapes
+// ============================================================
+const SHAPES = [
+  {
+    nombre: 'Círculo',
+    emoji: '⭕',
+    color: '#00d4e8',
+    draw: function(ctx, cx, cy, sz) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, sz * 0.42, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  },
+  {
+    nombre: 'Triángulo',
+    emoji: '🔺',
+    color: '#ffd94a',
+    draw: function(ctx, cx, cy, sz) {
+      const h = sz * 0.45;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - h);
+      ctx.lineTo(cx + h * 0.9, cy + h * 0.6);
+      ctx.lineTo(cx - h * 0.9, cy + h * 0.6);
+      ctx.closePath();
+      ctx.stroke();
+    }
+  },
+  {
+    nombre: 'Línea recta',
+    emoji: '➖',
+    color: '#4ade80',
+    draw: function(ctx, cx, cy, sz) {
+      ctx.beginPath();
+      ctx.moveTo(cx - sz * 0.45, cy);
+      ctx.lineTo(cx + sz * 0.45, cy);
+      ctx.stroke();
+      // Arrow tips
+      ctx.beginPath();
+      ctx.moveTo(cx - sz*0.45, cy - 10);
+      ctx.lineTo(cx - sz*0.45, cy + 10);
+      ctx.moveTo(cx + sz*0.45, cy - 10);
+      ctx.lineTo(cx + sz*0.45, cy + 10);
+      ctx.stroke();
+    }
+  },
+  {
+    nombre: 'Zigzag',
+    emoji: '⚡',
+    color: '#f472b6',
+    draw: function(ctx, cx, cy, sz) {
+      const w = sz * 0.42, amp = sz * 0.22, segs = 5;
+      const step = (w * 2) / segs;
+      ctx.beginPath();
+      ctx.moveTo(cx - w, cy);
+      for(let i = 0; i <= segs; i++) {
+        const px = cx - w + i * step;
+        const py = cy + (i % 2 === 0 ? -amp : amp);
+        ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+  },
+  {
+    nombre: 'Cuadrado',
+    emoji: '🟦',
+    color: '#c084fc',
+    draw: function(ctx, cx, cy, sz) {
+      const s = sz * 0.4;
+      ctx.strokeRect(cx - s, cy - s, s * 2, s * 2);
+    }
+  }
+];
+
+function initWrite(){
+  state.drawing = false;
+  state.path = [];
+  state.shapeIdx = 0;
+  state.done = 0;
+  state.feedback = '';
+  state.feedbackLife = 0;
+  state.feedbackOk = true;
+  state.animPulse = 0;
+}
+
+function updateWrite(){
+  if(state.feedbackLife > 0) state.feedbackLife -= 0.025;
+  state.animPulse = (state.animPulse || 0) + 0.05;
+}
+
+function drawWrite(){
+  const shape = SHAPES[state.shapeIdx % SHAPES.length];
+  const PAD = 70;    // top HUD clearance
+
+  // ── Layout: left panel (reference) | right panel (drawing)
+  const panelW = W / 2 - 30;
+  const panelH = H - PAD - 80;
+  const lx = 20, ly = PAD + 10;       // left panel origin
+  const rx = W / 2 + 10, ry = PAD + 10; // right panel origin
+
+  // ── LEFT PANEL — reference shape ──────────────────────────
+  // Panel background
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.strokeStyle = shape.color + '55';
+  ctx.lineWidth = 2;
+  roundRect(ctx, lx, ly, panelW, panelH, 20);
+  ctx.fill(); ctx.stroke();
+
+  // Label top
+  ctx.font = 'bold 15px Nunito';
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.textAlign = 'center';
+  ctx.fillText('MODELO A IMITAR', lx + panelW/2, ly + 28);
+
+  // Big emoji
+  ctx.font = '52px serif';
+  ctx.fillText(shape.emoji, lx + panelW/2, ly + 90);
+
+  // Shape name
+  ctx.font = 'bold 26px Fredoka One, Nunito';
+  ctx.fillStyle = shape.color;
+  ctx.shadowColor = shape.color;
+  ctx.shadowBlur = 18 + Math.sin(state.animPulse) * 6;
+  ctx.fillText(shape.nombre, lx + panelW/2, ly + 130);
+  ctx.shadowBlur = 0;
+
+  // Draw reference shape in the panel
+  const cx = lx + panelW / 2;
+  const cy = ly + panelH * 0.62;
+  const sz = Math.min(panelW, panelH) * 0.48;
+
+  ctx.strokeStyle = shape.color;
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = shape.color;
+  ctx.shadowBlur = 20;
+  shape.draw(ctx, cx, cy, sz);
+  ctx.shadowBlur = 0;
+
+  // Arrow hint: "dibuja esto →"
+  ctx.font = 'bold 14px Nunito';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.textAlign = 'center';
+  ctx.fillText('↑ dibuja esta forma en el panel de la derecha', lx + panelW/2, ly + panelH - 20);
+
+  ctx.restore();
+
+  // ── RIGHT PANEL — drawing area ────────────────────────────
+  ctx.save();
+
+  // Background
+  const hasPath = state.path.length > 1;
+  ctx.fillStyle = hasPath ? 'rgba(74,222,128,0.04)' : 'rgba(255,255,255,0.03)';
+  ctx.strokeStyle = hasPath ? '#4ade8066' : 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 6]);
+  roundRect(ctx, rx, ry, panelW, panelH, 20);
+  ctx.fill(); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Label top
+  ctx.font = 'bold 15px Nunito';
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.textAlign = 'center';
+  ctx.fillText('✏️  TU DIBUJO  — arrastra aquí', rx + panelW/2, ry + 28);
+
+  // Pencil icon when empty
+  if(state.path.length === 0){
+    ctx.font = '64px serif';
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.fillText('✏️', rx + panelW/2, ry + panelH/2 + 20);
+    ctx.globalAlpha = 1;
+    ctx.font = '16px Nunito';
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillText('Empieza a dibujar aquí', rx + panelW/2, ry + panelH/2 + 65);
+  }
+
+  // User path
+  if(hasPath){
+    ctx.beginPath();
+    ctx.moveTo(state.path[0].x, state.path[0].y);
+    for(let i = 1; i < state.path.length; i++) ctx.lineTo(state.path[i].x, state.path[i].y);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 18;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Start dot
+    ctx.beginPath();
+    ctx.arc(state.path[0].x, state.path[0].y, 8, 0, Math.PI*2);
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+  }
+
+  ctx.restore();
+
+  // ── BOTTOM BAR ───────────────────────────────────────────
+  ctx.save();
+
+  // Progress dots
+  const dotY = H - 45, dotSpacing = 28, dotsTotal = 5;
+  const dotsStartX = W/2 - (dotsTotal-1)*dotSpacing/2;
+  for(let i = 0; i < dotsTotal; i++){
+    ctx.beginPath();
+    ctx.arc(dotsStartX + i*dotSpacing, dotY, i < state.done ? 10 : 7, 0, Math.PI*2);
+    ctx.fillStyle = i < state.done ? '#4ade80' : 'rgba(255,255,255,0.15)';
+    ctx.shadowColor = i < state.done ? '#4ade80' : 'transparent';
+    ctx.shadowBlur = i < state.done ? 10 : 0;
+    ctx.fill();
+    if(i < state.done){
+      ctx.font = 'bold 11px Nunito';
+      ctx.fillStyle = '#0f1e30';
+      ctx.textAlign = 'center';
+      ctx.fillText('✓', dotsStartX + i*dotSpacing, dotY + 4);
+    }
+  }
+  ctx.shadowBlur = 0;
+
+  // Validate button — bottom right
+  const btnW = 180, btnH = 46;
+  const btnX = W - btnW - 24, btnY = H - btnH - 18;
+  const canValidate = state.path.length > 15;
+  ctx.fillStyle = canValidate ? '#4ade80' : 'rgba(255,255,255,0.08)';
+  ctx.strokeStyle = canValidate ? '#4ade80' : 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 2;
+  roundRect(ctx, btnX, btnY, btnW, btnH, 23);
+  ctx.fill(); ctx.stroke();
+  ctx.font = 'bold 17px Nunito';
+  ctx.fillStyle = canValidate ? '#0f1e30' : 'rgba(255,255,255,0.3)';
+  ctx.textAlign = 'center';
+  ctx.fillText('✓ ¡Hecho! Validar', btnX + btnW/2, btnY + 29);
+
+  // Clear button — bottom left of right panel
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  roundRect(ctx, rx, H - 64, 90, 40, 20);
+  ctx.fill(); ctx.stroke();
+  ctx.font = 'bold 14px Nunito';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillText('🗑 Borrar', rx + 45, H - 38);
+
+  ctx.restore();
+
+  // ── FEEDBACK OVERLAY ─────────────────────────────────────
+  if(state.feedbackLife > 0){
+    ctx.save();
+    ctx.globalAlpha = Math.min(state.feedbackLife, 1);
+    const msg = state.feedbackOk ? '¡Perfecto! ✓' : '¡Inténtalo!';
+    const col = state.feedbackOk ? '#4ade80' : '#ffd94a';
+    ctx.font = 'bold 56px Fredoka One, Nunito';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = col;
+    ctx.shadowColor = col; ctx.shadowBlur = 40;
+    ctx.fillText(msg, W/2, H/2);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+}
+
+function mousedownWrite(x, y){
+  const shape = SHAPES[state.shapeIdx % SHAPES.length];
+  const PAD = 70;
+  const panelW = W/2 - 30;
+  const panelH = H - PAD - 80;
+  const rx = W/2 + 10, ry = PAD + 10;
+
+  // Clear button
+  if(x > rx && x < rx+90 && y > H-64 && y < H-24){
+    state.path = [];
+    return;
+  }
+
+  // Validate button
+  const btnW = 180, btnH = 46;
+  const btnX = W - btnW - 24, btnY = H - btnH - 18;
+  if(x > btnX && x < btnX+btnW && y > btnY && y < btnY+btnH && state.path.length > 15){
+    validateWrite();
+    return;
+  }
+
+  // Only draw in right panel
+  if(x > rx && x < rx+panelW && y > ry && y < ry+panelH){
+    state.drawing = true;
+    state.path = [];
+    state.path.push({x, y});
+  }
+}
+
+function mousemoveWrite(x, y, e){
+  if(state.drawing && (e.buttons === 1 || e.type === 'touchmove')){
+    state.path.push({x, y});
+  }
+}
+
+function mouseupWrite(){
+  state.drawing = false;
+}
+
+function validateWrite(){
+  if(state.path.length < 15) return;
+  spawnParticles(W * 0.75, H/2, '#4ade80', 18);
+  addScore(200);
+  state.done++;
+  state.feedbackOk = true;
+  state.feedback = '¡Perfecto! ✓';
+  state.feedbackLife = 1.8;
+  state.shapeIdx++;
+  state.path = [];
+  if(state.done >= 5) setTimeout(() => endGame(true), 1200);
+}
+
+// ============================================================
+//  GAME 6: MULTI-TOUCH — click multiple fast
+// ============================================================
+function initMulti(){
+  state.balls=[];
+  state.popped=0;
+  state.timer=0;
+  state.lastSpawn=-9999;
+  state.timeLimit=30000;
+  state.startTime=performance.now();
+}
+function updateMulti(ts){
+  const elapsed=ts-state.startTime;
+  if(elapsed>state.timeLimit) {endGame(true);return;}
+  if(ts-state.lastSpawn>800){
+    const colors3=['#00d4e8','#e8621a','#ffd94a','#4ade80','#f472b6','#c084fc'];
+    const count=Math.min(2+Math.floor(elapsed/5000),5);
+    if(state.balls.length<count){
+      state.balls.push({
+        x:W*0.1+Math.random()*W*0.8,
+        y:H*0.15+Math.random()*H*0.65,
+        r:Math.random()*25+20,
+        color:colors3[Math.floor(Math.random()*colors3.length)],
+        life:1.0, maxLife:1.0
+      });
+    }
+    state.lastSpawn=ts;
+  }
+  for(let i=state.balls.length-1;i>=0;i--){
+    state.balls[i].life-=0.008;
+    if(state.balls[i].life<=0) state.balls.splice(i,1);
+  }
+}
+function drawMulti(ts){
+  const elapsed=ts-state.startTime;
+  const remaining=Math.max(0,(state.timeLimit-elapsed)/1000);
+  ctx.save();
+  ctx.font='bold 20px Nunito';
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.textAlign='center';
+  ctx.fillText(`⏱️ ${remaining.toFixed(1)}s • Tocadas: ${state.popped}`, W/2, 80);
+  // Timer bar
+  const bw=W*0.6, bx=W/2-bw/2, by=95;
+  ctx.fillStyle='rgba(255,255,255,0.1)';
+  roundRect(ctx,bx,by,bw,10,5); ctx.fill();
+  ctx.fillStyle='#00d4e8';
+  roundRect(ctx,bx,by,bw*(remaining/30),10,5); ctx.fill();
+  ctx.restore();
+
+  for(const b of state.balls){
+    ctx.save();
+    ctx.globalAlpha=b.life;
+    ctx.translate(b.x,b.y);
+    ctx.shadowColor=b.color;ctx.shadowBlur=20;
+    const grd=ctx.createRadialGradient(-b.r*0.3,-b.r*0.3,2,0,0,b.r);
+    grd.addColorStop(0,'rgba(255,255,255,0.9)');
+    grd.addColorStop(0.4,b.color);
+    grd.addColorStop(1,b.color+'44');
+    ctx.beginPath();ctx.arc(0,0,b.r,0,Math.PI*2);
+    ctx.fillStyle=grd;ctx.fill();
+    // Life ring
+    ctx.beginPath();ctx.arc(0,0,b.r+4,0,Math.PI*2*b.life);
+    ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=3;ctx.stroke();
+    ctx.restore();
+  }
+}
+function clickMulti(x,y){
+  for(let i=state.balls.length-1;i>=0;i--){
+    const b=state.balls[i];
+    if(Math.hypot(x-b.x,y-b.y)<b.r+8){
+      spawnParticles(b.x,b.y,b.color,10);
+      floatText('+50',b.x,b.y,'#ffd94a');
+      addScore(50);
+      state.popped++;
+      state.balls.splice(i,1);
+      return;
+    }
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+showScreen('menu');
+</script>
+</body>
+</html>
